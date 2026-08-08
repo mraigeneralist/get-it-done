@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------
+# SECRETS — never commit. This file is committed FIRST, before any
+# other file is staged, so tokens can never reach the public repo.
+# ---------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native builds
+android/
+ios/
+*.apk
+*.aab
+*.ipa
+*.keystore
+!debug.keystore
+
+# Metro
+.metro-health-check*
+.metro-cache/
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/
+
+# macOS / editors
+.DS_Store
+*.pem
+*.tsbuildinfo
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log

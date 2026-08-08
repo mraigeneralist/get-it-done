@@ -47,14 +47,35 @@ export default function FoundationScreen() {
       const host = env.supabaseUrl.replace(/^https?:\/\//, '').split('.')[0];
       set(0, { state: 'pass', value: 'OK', detail: `Project ${host}` });
 
-      // 2 + 3 — one request answers both. Signed out we hold the anon key,
-      // so the request must succeed; but the achievements policy only grants
-      // reads to authenticated users, so it must come back empty.
+      // 2 + 3 — one request answers both.
+      //
+      // Two separate layers stand between a signed-out reader and this table,
+      // and it matters which one answers:
+      //   GRANT decides whether a role may touch the table at all.
+      //   RLS decides which rows a permitted role gets back.
+      // We revoked every privilege from `anon`, so Postgres rejects the read
+      // before any policy runs. A "permission denied" is therefore not a
+      // failure — it is the strongest possible pass, and it still proves the
+      // request travelled to Mumbai and back.
       const started = Date.now();
       const { data, error } = await supabase.from('achievements').select('key');
       const ms = Date.now() - started;
 
+      const denied =
+        error?.code === '42501' || /permission denied/i.test(error?.message ?? '');
+
+      if (denied) {
+        set(1, { state: 'pass', value: `${ms} ms`, detail: 'Round trip to Mumbai' });
+        set(2, {
+          state: 'pass',
+          value: 'LOCKED',
+          detail: 'Postgres refused the read — signed-out users hold no grant',
+        });
+        return;
+      }
+
       if (error) {
+        // No Postgres error code means we never reached Postgres.
         set(1, { state: 'fail', value: 'FAILED', detail: error.message });
         set(2, { state: 'fail', value: '—', detail: 'Skipped: no connection' });
         return;
@@ -73,7 +94,7 @@ export default function FoundationScreen() {
         set(2, {
           state: 'fail',
           value: 'OFF',
-          detail: `${visible} rows leaked to an anonymous reader`,
+          detail: `${visible} of ${CATALOG_SIZE} rows leaked to an anonymous reader`,
         });
       }
     })();
@@ -123,7 +144,7 @@ export default function FoundationScreen() {
       <Text style={styles.footer}>
         {allPassed
           ? 'Foundation is live. Next: sign in, then one task end to end.'
-          : 'Waiting on the checks above.'}
+          : 'Running checks…'}
       </Text>
     </ScrollView>
   );

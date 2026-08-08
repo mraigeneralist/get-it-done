@@ -27,6 +27,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./plugins/with-low-memory-gradle",
       "expo-router",
       [
         "expo-splash-screen",
@@ -40,6 +41,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "82ce4476-f44d-4d6b-89e4-e99c2a21f9d8"
+      }
+    },
+    "owner": "theabbasali"
   }
 }

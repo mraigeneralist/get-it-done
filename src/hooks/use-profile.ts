@@ -21,7 +21,11 @@ export type ProfileView = Profile & {
   progress: number;
 };
 
-function decorate(profile: Profile): ProfileView {
+/**
+ * Adds the derived values the UI needs. Exported so a mutation can rebuild
+ * the scoreboard from an RPC result without a follow-up fetch.
+ */
+export function decorateProfile(profile: Profile): ProfileView {
   const floor = xpForLevel(profile.level);
   const ceiling = xpForLevel(profile.level + 1);
   const span = Math.max(1, ceiling - floor);
@@ -47,7 +51,7 @@ export function useProfile() {
       // to the caller's own row. Filtering again would just restate it.
       const { data, error } = await supabase.from('profiles').select('*').single();
       if (error) throw error;
-      return decorate(data);
+      return decorateProfile(data);
     },
   });
 }
